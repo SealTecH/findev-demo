@@ -1,0 +1,20 @@
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.app-toolbar {
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.app-title {
+  font: var(--mat-sys-title-large);
+}
+
+.app-content {
+  box-sizing: border-box;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
