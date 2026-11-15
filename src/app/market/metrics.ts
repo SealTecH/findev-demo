@@ -71,7 +71,6 @@ export function formatMetric(value: number | null, format: MetricFormat): string
     case 'quantity':
       return String(value);
     case 'ratio': {
-  
       const rounded = Math.round(value * 100) / 100;
       return `${rounded > 0 ? '+' : ''}${rounded.toFixed(2)}`;
     }
