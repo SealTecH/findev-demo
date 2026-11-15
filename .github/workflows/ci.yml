@@ -1,0 +1,78 @@
+# Checks only — deployment is done by the Vercel Git integration on every push.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    name: Rust — fmt, clippy, test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: wasm/producer
+    steps:
+      - uses: actions/checkout@v5
+
+      # rustup is preinstalled on GitHub runners; rust-toolchain.toml pins channel,
+      # wasm32 target, clippy and rustfmt.
+      - name: Install Rust toolchain
+        run: rustup toolchain install && rustc --version
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: wasm/producer
+
+      - name: Format
+        run: cargo fmt --check
+
+      - name: Clippy (native)
+        run: cargo clippy --all-targets --locked -- -D warnings
+
+      - name: Clippy (wasm32)
+        run: cargo clippy --target wasm32-unknown-unknown --locked -- -D warnings
+
+      - name: Test
+        run: cargo test --locked
+
+  web:
+    name: Web — lint, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # The same script Vercel runs: Rust toolchain, wasm-bindgen CLI from Cargo.lock, npm ci.
+      # Running it here means a broken install step fails CI, not only the deployment.
+      - name: Install (same as Vercel)
+        run: bash scripts/vercel-install.sh
+
+      # After the install step: the cache key needs the toolchain's rustc.
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: wasm/producer
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format
+        run: npm run format:check
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build

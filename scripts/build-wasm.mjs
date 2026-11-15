@@ -50,7 +50,6 @@ function kib(bytes) {
   return `${(bytes / 1024).toFixed(1)} KiB`;
 }
 
-
 if (!output('cargo', ['--version'], CRATE_DIR)) {
   fail(
     'Rust toolchain not found. Install it from https://rustup.rs ' +
