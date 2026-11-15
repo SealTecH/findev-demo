@@ -1,0 +1,25 @@
+[package]
+name = "producer"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Simulated market-data producer compiled to WebAssembly"
+
+[lib]
+# cdylib — the .wasm module for the browser; rlib — lets `cargo test` link the crate natively.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Pinned exactly: the wasm-bindgen CLI used in the build must have the same version.
+wasm-bindgen = "=0.2.130"
+serde = { version = "1.0.229", features = ["derive"] }
+serde-wasm-bindgen = "0.6.5"
+# Seeded PRNG only: without the default `std` feature there is no global, auto-seeded RNG,
+# so nothing needs OS entropy (no getrandom/js feature on wasm32-unknown-unknown).
+fastrand = { version = "2.5.0", default-features = false }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
