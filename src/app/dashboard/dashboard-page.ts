@@ -1,11 +1,63 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
+import { MatButton } from '@angular/material/button';
+import { MatCard, MatCardContent } from '@angular/material/card';
+import { MatTableModule } from '@angular/material/table';
 
-/** Placeholder — the live instruments table and producer status arrive in M8. */
+import { formatMetric, METRICS, type MetricId } from '../market/metrics';
+import { ProducerService } from '../producer/producer-service';
+import { STATUS_LABELS } from '../producer/run-state';
+
+interface TableRow {
+  readonly symbol: string;
+  readonly cells: Readonly<Record<MetricId, string>>;
+}
+
 @Component({
   selector: 'app-dashboard-page',
-  template: `
-    <h1 class="page-title">Market dashboard</h1>
-    <p>Live instrument metrics will appear here.</p>
-  `,
+  imports: [MatButton, MatCard, MatCardContent, MatTableModule],
+  templateUrl: './dashboard-page.html',
+  styleUrl: './dashboard-page.scss',
 })
-export class DashboardPage {}
+export class DashboardPage {
+  protected readonly producer = inject(ProducerService);
+
+  protected readonly state = this.producer.state;
+  protected readonly statusLabel = computed(() => STATUS_LABELS[this.state().status]);
+
+  protected readonly metrics = METRICS;
+  protected readonly columns = ['symbol', ...METRICS.map((m) => m.id)];
+
+  protected readonly rows = computed<TableRow[]>(() =>
+    this.producer.rows().map((row) => ({
+      symbol: row.symbol,
+      cells: Object.fromEntries(
+        METRICS.map((m) => [m.id, formatMetric(row.metrics[m.id], m.format)]),
+      ) as TableRow['cells'],
+    })),
+  );
+
+  protected readonly actualRate = computed(() => {
+    const rate = this.producer.actualRate();
+    return rate === null ? null : Math.round(rate);
+  });
+  protected readonly nominalRate = computed(() => Math.round(this.producer.nominalRate()));
+
+  // Pause/Resume works only on a run that is running or paused and not waiting for the worker.
+  protected readonly canToggle = computed(() => {
+    const { status, pending } = this.state();
+    return !pending && (status === 'running' || status === 'paused');
+  });
+
+  // A new run with the same settings; needs a working producer.
+  protected readonly canRestart = computed(() => {
+    const { status } = this.state();
+    return status === 'running' || status === 'paused';
+  });
+
+  protected readonly trackBySymbol = (_: number, row: TableRow) => row.symbol;
+
+  protected togglePause(): void {
+    if (this.state().status === 'paused') this.producer.resume();
+    else this.producer.pause();
+  }
+}

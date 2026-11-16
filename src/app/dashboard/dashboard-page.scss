@@ -1,0 +1,70 @@
+.run-status,
+.error-card {
+  margin-bottom: 16px;
+}
+
+.run-status-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 32px;
+}
+
+.run-status-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.run-id {
+  font: var(--mat-sys-title-medium);
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+  // Takes its own line on narrow screens.
+  flex: 1 1 320px;
+  margin: 0;
+
+  dt {
+    font: var(--mat-sys-label-medium);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.run-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.error-message {
+  color: var(--mat-sys-error);
+}
+
+.empty {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// Narrow screens scroll the table instead of the page.
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+}
+
+.numeric {
+  text-align: right;
+  white-space: nowrap;
+  // Digits keep their width, so values do not jump on every update.
+  font-variant-numeric: tabular-nums;
+}

@@ -51,7 +51,7 @@ export class ProducerEngine {
       case 'init':
         return this.init(message.wasmUrl);
       case 'start':
-        return this.start(message.runId, message.settings);
+        return this.start(message.runId, message.settings, message.paused);
       case 'pause':
         return this.pause(message.runId);
       case 'resume':
@@ -72,7 +72,7 @@ export class ProducerEngine {
     }
   }
 
-  private start(runId: number, settings: ProducerSettings): void {
+  private start(runId: number, settings: ProducerSettings, paused: boolean): void {
     this.stop();
     if (!this.wasm) {
       this.fail(runId, 'run', 'The Wasm producer is not initialized.');
@@ -93,7 +93,7 @@ export class ProducerEngine {
       settings,
       generator,
       aggregates: createAggregates(settings.instrumentCount),
-      state: 'running',
+      state: paused ? 'paused' : 'running',
       timer: undefined,
       nextAt: now + settings.intervalMs,
       batches: 0,
@@ -101,8 +101,8 @@ export class ProducerEngine {
       activeMs: 0,
       runningSince: now,
     };
-    this.deps.post({ type: 'started', runId, symbols: generator.symbols });
-    this.schedule(this.run);
+    this.deps.post({ type: 'started', runId, symbols: generator.symbols, state: this.run.state });
+    if (!paused) this.schedule(this.run);
   }
 
   private pause(runId: number): void {

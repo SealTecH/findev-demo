@@ -4,13 +4,14 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { App } from './app';
 import { routes } from './app.routes';
 import { DashboardPage } from './dashboard/dashboard-page';
+import { provideFakeWorker } from './producer/fake-worker';
 import { SettingsPage } from './settings/settings-page';
 
 describe('App shell', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes)],
+      providers: [provideRouter(routes), provideFakeWorker([])],
     });
   });
 

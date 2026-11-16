@@ -1,49 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 
 import { emptyAggregate } from '../market/aggregator';
-import { ProducerService, WASM_URL, WORKER_FACTORY } from './producer-service';
-import type { MainToWorker, WorkerToMain } from './protocol';
+import { FakeWorker, provideFakeWorker, TEST_WASM_URL } from './fake-worker';
+import { ProducerService } from './producer-service';
+import type { WorkerToMain } from './protocol';
 import { DEFAULT_SETTINGS, type ProducerSettings } from './settings';
 
 const NEW_SETTINGS: ProducerSettings = { instrumentCount: 3, updatesPerBatch: 10, intervalMs: 50 };
 
-class FakeWorker extends EventTarget {
-  readonly sent: MainToWorker[] = [];
-  terminated = false;
-
-  postMessage(message: MainToWorker): void {
-    this.sent.push(message);
-  }
-
-  terminate(): void {
-    this.terminated = true;
-  }
-
-  // Simulates a message from the worker.
-  reply(message: WorkerToMain): void {
-    this.dispatchEvent(new MessageEvent('message', { data: message }));
-  }
-
-  lastSent(): MainToWorker | undefined {
-    return this.sent.at(-1);
-  }
-}
-
 function setup() {
   const workers: FakeWorker[] = [];
-  TestBed.configureTestingModule({
-    providers: [
-      { provide: WASM_URL, useValue: 'http://localhost/wasm/producer_bg.wasm' },
-      {
-        provide: WORKER_FACTORY,
-        useValue: () => {
-          const worker = new FakeWorker();
-          workers.push(worker);
-          return worker as unknown as Worker;
-        },
-      },
-    ],
-  });
+  TestBed.configureTestingModule({ providers: provideFakeWorker(workers) });
   const service = TestBed.inject(ProducerService);
   return { service, workers, worker: () => workers.at(-1)! };
 }
@@ -53,7 +20,7 @@ function running() {
   const context = setup();
   context.service.apply(DEFAULT_SETTINGS);
   context.worker().reply({ type: 'ready' });
-  context.worker().reply({ type: 'started', runId: 1, symbols: ['TKR001'] });
+  context.worker().reply({ type: 'started', runId: 1, symbols: ['TKR001'], state: 'running' });
   return context;
 }
 
@@ -71,9 +38,7 @@ describe('ProducerService', () => {
     const { workers } = setup();
     TestBed.inject(ProducerService); // e.g. another page injecting it
     expect(workers).toHaveLength(1);
-    expect(workers[0].sent).toEqual([
-      { type: 'init', wasmUrl: 'http://localhost/wasm/producer_bg.wasm' },
-    ]);
+    expect(workers[0].sent).toEqual([{ type: 'init', wasmUrl: TEST_WASM_URL }]);
   });
 
   it('starts the requested run once the worker is ready', () => {
@@ -83,7 +48,37 @@ describe('ProducerService', () => {
     expect(service.state().status).toBe('initializing');
 
     worker().reply({ type: 'ready' });
-    expect(worker().lastSent()).toEqual({ type: 'start', runId: 1, settings: DEFAULT_SETTINGS });
+    expect(worker().lastSent()).toEqual({
+      type: 'start',
+      runId: 1,
+      settings: DEFAULT_SETTINGS,
+      paused: false,
+    });
+  });
+
+  it('a run requested paused starts paused once the worker is ready', () => {
+    const { service, worker } = setup();
+    service.apply(DEFAULT_SETTINGS, { paused: true });
+    worker().reply({ type: 'ready' });
+    expect(worker().lastSent()).toEqual({
+      type: 'start',
+      runId: 1,
+      settings: DEFAULT_SETTINGS,
+      paused: true,
+    });
+  });
+
+  it('restart starts a new generating run with the applied settings', () => {
+    const { service, worker } = running();
+    service.apply(NEW_SETTINGS, { paused: true });
+    service.restart();
+    expect(worker().lastSent()).toEqual({
+      type: 'start',
+      runId: 3,
+      settings: NEW_SETTINGS,
+      paused: false,
+    });
+    expect(service.state()).toMatchObject({ runId: 3, status: 'starting', instruments: [] });
   });
 
   it('shows one row per symbol with unavailable values before the first snapshot', () => {
@@ -104,7 +99,12 @@ describe('ProducerService', () => {
 
     service.apply(NEW_SETTINGS);
     expect(service.state()).toMatchObject({ runId: 2, status: 'starting', instruments: [] });
-    expect(worker().lastSent()).toEqual({ type: 'start', runId: 2, settings: NEW_SETTINGS });
+    expect(worker().lastSent()).toEqual({
+      type: 'start',
+      runId: 2,
+      settings: NEW_SETTINGS,
+      paused: false,
+    });
   });
 
   it('ignores a snapshot of the previous run that arrives after apply', () => {
@@ -113,7 +113,12 @@ describe('ProducerService', () => {
     worker().reply(snapshot(1, 99));
     expect(service.state().instruments).toEqual([]);
 
-    worker().reply({ type: 'started', runId: 2, symbols: ['TKR001', 'TKR002', 'TKR003'] });
+    worker().reply({
+      type: 'started',
+      runId: 2,
+      symbols: ['TKR001', 'TKR002', 'TKR003'],
+      state: 'running',
+    });
     worker().reply(snapshot(2, 5));
     expect(service.rows()[0].metrics.volume).toBe(5);
   });
@@ -140,8 +145,13 @@ describe('ProducerService', () => {
     worker().reply({ type: 'status', runId: 1, state: 'paused' });
 
     service.apply(NEW_SETTINGS);
-    expect(worker().lastSent()).toEqual({ type: 'start', runId: 2, settings: NEW_SETTINGS });
-    worker().reply({ type: 'started', runId: 2, symbols: [] });
+    expect(worker().lastSent()).toEqual({
+      type: 'start',
+      runId: 2,
+      settings: NEW_SETTINGS,
+      paused: false,
+    });
+    worker().reply({ type: 'started', runId: 2, symbols: [], state: 'running' });
     expect(service.state().status).toBe('running');
   });
 
@@ -161,15 +171,14 @@ describe('ProducerService', () => {
     service.retry();
     expect(workers[0].terminated).toBe(true);
     expect(workers).toHaveLength(2);
-    expect(workers[1].sent).toEqual([
-      { type: 'init', wasmUrl: 'http://localhost/wasm/producer_bg.wasm' },
-    ]);
+    expect(workers[1].sent).toEqual([{ type: 'init', wasmUrl: TEST_WASM_URL }]);
 
     workers[1].reply({ type: 'ready' });
     expect(workers[1].lastSent()).toEqual({
       type: 'start',
       runId: 2,
       settings: DEFAULT_SETTINGS,
+      paused: false,
     });
   });
 

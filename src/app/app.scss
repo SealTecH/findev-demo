@@ -12,6 +12,10 @@
   font: var(--mat-sys-title-large);
 }
 
+.app-spacer {
+  flex: 1;
+}
+
 .app-content {
   box-sizing: border-box;
   max-width: 1200px;
