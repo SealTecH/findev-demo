@@ -20,7 +20,7 @@ import {
 import { buildRows } from '../market/metrics';
 import type { MainToWorker, WorkerToMain } from './protocol';
 import { INITIAL_STATE, reduce, type StoreAction } from './run-state';
-import { nominalRate, type ProducerSettings } from './settings';
+import type { ProducerSettings } from './settings';
 
 export const WORKER_FACTORY = new InjectionToken<() => Worker>('WORKER_FACTORY', {
   providedIn: 'root',
@@ -57,11 +57,6 @@ export class ProducerService {
   );
 
   readonly rows = computed(() => buildRows(this.state().symbols, this.state().instruments));
-  readonly nominalRate = computed(() => nominalRate(this.state().settings));
-  readonly actualRate = computed(() => {
-    const { updates, activeMs } = this.state().stats;
-    return activeMs === 0 ? null : (updates * 1_000) / activeMs;
-  });
 
   // Starts a new run and clears the previous totals.
   apply(settings: ProducerSettings, { paused = false } = {}): void {

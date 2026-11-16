@@ -36,12 +36,6 @@ export class DashboardPage {
     })),
   );
 
-  protected readonly actualRate = computed(() => {
-    const rate = this.producer.actualRate();
-    return rate === null ? null : Math.round(rate);
-  });
-  protected readonly nominalRate = computed(() => Math.round(this.producer.nominalRate()));
-
   // Not while a command waits for the worker.
   protected readonly canToggle = computed(() => {
     const { status, pending } = this.state();

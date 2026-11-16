@@ -29,7 +29,7 @@ function snapshot(runId: number, volume: number): WorkerToMain {
     type: 'snapshot',
     runId,
     instruments: [{ ...emptyAggregate(), volume }],
-    stats: { batches: 1, updates: volume, activeMs: 500 },
+    stats: { batches: 1, updates: volume },
   };
 }
 

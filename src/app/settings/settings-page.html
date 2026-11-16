@@ -21,16 +21,6 @@
     </mat-form-field>
   }
 
-  <p class="rate" data-testid="nominal-rate">
-    Nominal rate:
-    @let rate = nominalRate();
-    @if (rate !== null) {
-      <strong>{{ rate }} updates/s</strong>
-    } @else {
-      <strong>—</strong>
-    }
-  </p>
-
   <div class="actions">
     <button matButton="filled" type="submit" [disabled]="validSettings() === null">Apply</button>
     <button matButton="outlined" type="button" (click)="reset()">Reset to defaults</button>

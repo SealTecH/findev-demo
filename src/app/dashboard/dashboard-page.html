@@ -25,13 +25,6 @@
           {{ s.stats.updates }} updates in {{ s.stats.batches }} batches
         </dd>
       </div>
-      <div>
-        <dt>Rate</dt>
-        <dd>
-          @let rate = actualRate();
-          {{ rate === null ? '—' : rate }} updates/s (nominal {{ nominalRate() }})
-        </dd>
-      </div>
     </dl>
 
     <div class="run-actions">

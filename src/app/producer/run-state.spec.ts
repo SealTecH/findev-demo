@@ -18,7 +18,7 @@ const RUNNING: RunState = apply(
     type: 'snapshot',
     runId: 1,
     instruments: [{ ...emptyAggregate(), volume: 40 }],
-    stats: { batches: 1, updates: 40, activeMs: 500 },
+    stats: { batches: 1, updates: 40 },
   },
 );
 
@@ -28,7 +28,7 @@ describe('run state', () => {
       status: 'initializing',
       settings: DEFAULT_SETTINGS,
       instruments: [],
-      stats: { batches: 0, updates: 0, activeMs: 0 },
+      stats: { batches: 0, updates: 0 },
     });
   });
 
@@ -85,7 +85,7 @@ describe('run state', () => {
         type: 'snapshot',
         runId: 1,
         instruments: [{ ...emptyAggregate(), volume: 99 }],
-        stats: { batches: 9, updates: 99, activeMs: 9 },
+        stats: { batches: 9, updates: 99 },
       },
       { type: 'started', runId: 1, symbols: ['OLD'], state: 'running' },
       { type: 'status', runId: 1, state: 'paused' },

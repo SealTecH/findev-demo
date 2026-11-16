@@ -1,14 +1,10 @@
-import { DEFAULT_SETTINGS, nominalRate, SETTINGS_SCHEMA, settingError } from './settings';
+import { DEFAULT_SETTINGS, SETTINGS_SCHEMA, settingError } from './settings';
 
 const definition = (key: string) => SETTINGS_SCHEMA.find((s) => s.key === key)!;
 
 describe('settings', () => {
   it('defaults match the task: 5 instruments, 100 updates, 500 ms', () => {
     expect(DEFAULT_SETTINGS).toEqual({ instrumentCount: 5, updatesPerBatch: 100, intervalMs: 500 });
-  });
-
-  it('nominal rate is across all instruments: 100 per 500 ms = 200/s', () => {
-    expect(nominalRate(DEFAULT_SETTINGS)).toBe(200);
   });
 
   describe.each([

@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   type AbstractControl,
@@ -16,7 +16,6 @@ import { map, startWith } from 'rxjs';
 import { ProducerService } from '../producer/producer-service';
 import {
   DEFAULT_SETTINGS,
-  nominalRate,
   type ProducerSettings,
   type SettingDefinition,
   settingError,
@@ -73,11 +72,6 @@ export class SettingsPage {
     ),
     { requireSync: true },
   );
-
-  protected readonly nominalRate = computed(() => {
-    const settings = this.validSettings();
-    return settings === null ? null : Math.round(nominalRate(settings));
-  });
 
   protected apply(): void {
     const settings = this.validSettings();

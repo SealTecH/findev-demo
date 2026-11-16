@@ -32,9 +32,6 @@ interface Run {
   nextAt: number;
   batches: number;
   updates: number;
-  // Running time without pauses, up to `runningSince`.
-  activeMs: number;
-  runningSince: number;
 }
 
 // Worker logic: generates a batch per interval and posts the totals.
@@ -96,8 +93,6 @@ export class ProducerEngine {
       nextAt: now + settings.intervalMs,
       batches: 0,
       updates: 0,
-      activeMs: 0,
-      runningSince: now,
     };
     this.deps.post({ type: 'started', runId, symbols: generator.symbols, state: this.run.state });
     if (!paused) this.schedule(this.run);
@@ -107,7 +102,6 @@ export class ProducerEngine {
     const run = this.run;
     if (run?.id !== runId || run.state !== 'running') return;
     clearTimeout(run.timer);
-    run.activeMs += Date.now() - run.runningSince;
     run.state = 'paused';
     this.deps.post({ type: 'status', runId, state: 'paused' });
   }
@@ -118,7 +112,6 @@ export class ProducerEngine {
     if (run?.id !== runId || run.state !== 'paused') return;
     const now = Date.now();
     run.state = 'running';
-    run.runningSince = now;
     run.nextAt = now + run.settings.intervalMs;
     this.deps.post({ type: 'status', runId, state: 'running' });
     this.schedule(run);
@@ -148,11 +141,7 @@ export class ProducerEngine {
       type: 'snapshot',
       runId: run.id,
       instruments: run.aggregates.map((a) => ({ ...a })),
-      stats: {
-        batches: run.batches,
-        updates: run.updates,
-        activeMs: run.activeMs + (now - run.runningSince),
-      },
+      stats: { batches: run.batches, updates: run.updates },
     });
 
     run.nextAt += run.settings.intervalMs;

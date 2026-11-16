@@ -72,7 +72,7 @@ describe('DashboardPage', () => {
             notionalCents: 300_040n,
           },
         ],
-        stats: { batches: 2, updates: 200, activeMs: 1_000 },
+        stats: { batches: 2, updates: 200 },
       },
     );
     expect(cells()).toEqual([['TKR001', '$100.02', '$0.02', '30', '$100.01', '+0.50']]);
@@ -136,7 +136,7 @@ describe('DashboardPage', () => {
         type: 'snapshot',
         runId: 1,
         instruments: [emptyAggregate()],
-        stats: { batches: 1, updates: 0, activeMs: 500 },
+        stats: { batches: 1, updates: 0 },
       },
     );
     expect(cells()).toEqual([['TKR001', '—', '—', '0', '—', '—']]);

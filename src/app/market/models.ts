@@ -12,8 +12,6 @@ export interface InstrumentAggregate {
 export interface RunStats {
   readonly batches: number;
   readonly updates: number;
-  // Time spent running, excluding pauses — for the actual update rate.
-  readonly activeMs: number;
 }
 
-export const EMPTY_STATS: RunStats = { batches: 0, updates: 0, activeMs: 0 };
+export const EMPTY_STATS: RunStats = { batches: 0, updates: 0 };

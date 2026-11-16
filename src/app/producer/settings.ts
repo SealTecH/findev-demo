@@ -55,8 +55,3 @@ export function settingError(definition: SettingDefinition, value: unknown): str
   if (value > definition.max) return `${definition.label} must be at most ${definition.max}.`;
   return null;
 }
-
-// Updates per second across all instruments.
-export function nominalRate(settings: ProducerSettings): number {
-  return (settings.updatesPerBatch * 1_000) / settings.intervalMs;
-}

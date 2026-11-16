@@ -10,7 +10,7 @@ running in a Web Worker, and the Angular UI displays the totals.
 
 - **Dashboard** has a table with one row per instrument: last price, bid–ask spread, cumulative
   volume, VWAP and order-book imbalance. It also shows the producer status, the run number, the
-  amount generated, the actual and nominal rate, a Pause/Resume button and **Restart run**
+  amount generated, a Pause/Resume button and **Restart run**
   (a new run with the same settings: totals are cleared and generation starts). If the producer
   fails, an error message with Retry replaces the table.
 - **Settings** is a form with three integer settings: instrument count (1–50), updates per batch
@@ -58,7 +58,7 @@ Dashboard ─ pause ─────┤                         Web Worker
                        │                  │        → aggregate totals    │
      merge → scan(reduce) → signal        └──────────────────────────────┘
                        │
-             rows, status, rates → pages
+             rows, status → pages
 ```
 
 - **Rust/Wasm (`wasm/producer`)** keeps a random walk of prices and the order book for each

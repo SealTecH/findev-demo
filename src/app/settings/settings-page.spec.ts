@@ -33,12 +33,9 @@ async function setup() {
 }
 
 describe('SettingsPage', () => {
-  it('shows the applied settings and the nominal rate', async () => {
-    const { inputs, page } = await setup();
+  it('shows the applied settings', async () => {
+    const { inputs } = await setup();
     expect(inputs().map((i) => i.value)).toEqual(['5', '100', '500']);
-    expect(page.querySelector('[data-testid="nominal-rate"]')?.textContent).toContain(
-      '200 updates/s',
-    );
   });
 
   it.each([
@@ -51,7 +48,6 @@ describe('SettingsPage', () => {
     await type(index, value);
     expect(page.querySelector('mat-error')?.textContent?.trim()).toBe(message);
     expect(applyButton().disabled).toBe(true);
-    expect(page.querySelector('[data-testid="nominal-rate"]')?.textContent).toContain('—');
   });
 
   it('editing does not affect the producer', async () => {

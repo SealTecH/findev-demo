@@ -121,7 +121,7 @@ describe('ProducerEngine', () => {
       expect(last.runId).toBe(1);
       expect(last.instruments[0]).toMatchObject({ volume: 6, notionalCents: 60_000n });
       expect(last.instruments[1].volume).toBe(0);
-      expect(last.stats).toEqual({ batches: 2, updates: 6, activeMs: 1_000 });
+      expect(last.stats).toEqual({ batches: 2, updates: 6 });
     });
 
     it('posts copies, so later batches do not change an earlier snapshot', async () => {
@@ -159,11 +159,10 @@ describe('ProducerEngine', () => {
 
       const last = of('snapshot').at(-1)!;
       expect(last.instruments[0].volume).toBe(6);
-      // Active time excludes the 10 s pause.
-      expect(last.stats).toEqual({ batches: 2, updates: 6, activeMs: 1_000 });
+      expect(last.stats).toEqual({ batches: 2, updates: 6 });
     });
 
-    it('a run can start paused: no batches until resume, paused time not counted', async () => {
+    it('a run can start paused: no batches until resume', async () => {
       const { engine, of } = await started(1, SETTINGS, true);
       expect(of('started')[0].state).toBe('paused');
 
@@ -173,7 +172,6 @@ describe('ProducerEngine', () => {
       await engine.handle({ type: 'resume', runId: 1 });
       vi.advanceTimersByTime(500);
       expect(of('snapshot')).toHaveLength(1);
-      expect(of('snapshot')[0].stats.activeMs).toBe(500);
     });
 
     it('ignores pause/resume for another run and repeated commands', async () => {
