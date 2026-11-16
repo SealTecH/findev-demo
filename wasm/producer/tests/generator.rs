@@ -1,4 +1,4 @@
-//! Generator behaviour through the public core API (the same code the wasm layer wraps).
+//! Generator tests through the core API that the Wasm layer wraps.
 
 use std::collections::HashSet;
 
@@ -121,8 +121,7 @@ fn prices_evolve_from_previous_values() {
     let mut changed = 0;
     for pair in all.windows(2) {
         let (prev, next) = (mid(&pair[0]), mid(&pair[1]));
-        // One step moves the mid by at most 0.1 % (MAX_STEP_DIVISOR); the bid/ask midpoint sits
-        // within half a cent of the mid, so allow one extra cent.
+        // ≤ 0.1 % per step, plus a cent for rounding the bid/ask midpoint.
         let max_step = prev / f64::from(MAX_STEP_DIVISOR) + 1.0;
         assert!(
             (next - prev).abs() <= max_step,

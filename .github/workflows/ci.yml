@@ -1,4 +1,4 @@
-# Checks only — deployment is done by the Vercel Git integration on every push.
+# Checks only; Vercel deploys on every push.
 name: CI
 
 on:
@@ -23,8 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # rustup is preinstalled on GitHub runners; rust-toolchain.toml pins channel,
-      # wasm32 target, clippy and rustfmt.
+      # Toolchain, wasm32 target, clippy and rustfmt come from rust-toolchain.toml.
       - name: Install Rust toolchain
         run: rustup toolchain install && rustc --version
 
@@ -55,12 +54,11 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-      # The same script Vercel runs: Rust toolchain, wasm-bindgen CLI from Cargo.lock, npm ci.
-      # Running it here means a broken install step fails CI, not only the deployment.
+      # Same install script as on Vercel.
       - name: Install (same as Vercel)
         run: bash scripts/vercel-install.sh
 
-      # After the install step: the cache key needs the toolchain's rustc.
+      # After install: the cache key depends on rustc.
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: wasm/producer

@@ -45,7 +45,7 @@ impl MarketUpdate {
     /// Encodes the update in `UPDATE_FIELDS` order.
     pub fn to_record(&self) -> [i32; STRIDE] {
         [
-            // The index stays u32 in Rust (it indexes a Vec); at most MAX_INSTRUMENTS, so it fits.
+            // At most MAX_INSTRUMENTS, so it fits.
             i32::try_from(self.instrument_index).expect("instrument index fits in i32"),
             self.price_cents,
             self.trade_quantity,
@@ -56,7 +56,7 @@ impl MarketUpdate {
         ]
     }
 
-    /// Decodes one record (`record.len() == STRIDE`). Used by tests and tooling.
+    /// Decodes one record. Used by tests.
     pub fn from_record(record: &[i32]) -> Self {
         assert_eq!(record.len(), STRIDE, "a record has exactly {STRIDE} fields");
         Self {

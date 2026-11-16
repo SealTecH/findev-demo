@@ -56,7 +56,7 @@ export function settingError(definition: SettingDefinition, value: unknown): str
   return null;
 }
 
-/** Nominal generation rate across all instruments, in updates per second. */
+// Updates per second across all instruments.
 export function nominalRate(settings: ProducerSettings): number {
   return (settings.updatesPerBatch * 1_000) / settings.intervalMs;
 }

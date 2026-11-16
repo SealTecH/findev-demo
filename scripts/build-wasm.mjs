@@ -16,8 +16,7 @@ const PKG_DIR = join(ROOT, 'src', 'app', 'producer', 'wasm-pkg');
 const PUBLIC_DIR = join(ROOT, 'public', 'wasm');
 const WASM_FILE = `${CRATE_NAME}_bg.wasm`;
 
-// rustup installs into ~/.cargo/bin, which is not on PATH in every shell (e.g. a fresh
-// terminal on Windows, or Vercel's build step after the install step).
+// ~/.cargo/bin is not always on PATH (a fresh Windows terminal, the Vercel build step).
 const pathKey = Object.keys(process.env).find((key) => key.toUpperCase() === 'PATH') ?? 'PATH';
 const cargoBin = join(process.env.CARGO_HOME ?? join(homedir(), '.cargo'), 'bin');
 const env = { ...process.env, [pathKey]: [cargoBin, process.env[pathKey]].join(delimiter) };
@@ -70,7 +69,7 @@ if (installed !== expected) {
 run('cargo', ['build', '--release', '--locked', '--target', TARGET], CRATE_DIR);
 const rawWasm = join(CRATE_DIR, 'target', TARGET, 'release', `${CRATE_NAME}.wasm`);
 
-// wasm32 module → ES module glue + TypeScript declarations.
+// wasm32 → JS glue and .d.ts.
 rmSync(PKG_DIR, { recursive: true, force: true });
 run('wasm-bindgen', [
   '--target',
@@ -83,7 +82,7 @@ run('wasm-bindgen', [
   rawWasm,
 ]);
 
-// The binary goes to public/ to be served as /wasm/producer_bg.wasm.
+// Served as /wasm/producer_bg.wasm.
 mkdirSync(PUBLIC_DIR, { recursive: true });
 const servedWasm = join(PUBLIC_DIR, WASM_FILE);
 renameSync(join(PKG_DIR, WASM_FILE), servedWasm);

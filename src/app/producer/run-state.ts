@@ -67,7 +67,7 @@ export function reduce(state: RunState, action: StoreAction): RunState {
         runId: action.runId,
         settings: action.settings,
         ready: state.ready,
-        // Until the worker is ready the run waits; a broken worker stays broken until Retry.
+        // Waits for the worker; after a worker error, waits for Retry.
         status: state.ready ? 'starting' : state.status === 'error' ? 'error' : 'initializing',
         error: state.ready ? null : state.error,
       };

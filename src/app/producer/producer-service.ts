@@ -42,7 +42,7 @@ export class ProducerService {
   private readonly restart$ = new Subject<void>();
   private worker: Worker | null = null;
   private lastRunId = 0;
-  // Whether the requested run starts paused; kept for a start that waits for `ready`.
+  // Whether the next run starts paused.
   private startPaused = false;
 
   readonly state = toSignal(
@@ -63,7 +63,7 @@ export class ProducerService {
     return activeMs === 0 ? null : (updates * 1_000) / activeMs;
   });
 
-  // Starts a new run; the previous run's values and totals are cleared first, synchronously.
+  // Starts a new run and clears the previous totals.
   apply(settings: ProducerSettings, { paused = false } = {}): void {
     const runId = ++this.lastRunId;
     this.startPaused = paused;
@@ -72,7 +72,7 @@ export class ProducerService {
     if (this.state().ready) this.post({ type: 'start', runId, settings, paused });
   }
 
-  // A new run with the applied settings: totals are cleared and generation starts.
+  // A new generating run with the applied settings.
   restart(): void {
     this.apply(this.state().settings);
   }

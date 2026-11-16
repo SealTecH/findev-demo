@@ -32,14 +32,12 @@ interface Run {
   nextAt: number;
   batches: number;
   updates: number;
-  // Running time of finished stretches; the current one is added from `runningSince`.
+  // Running time without pauses, up to `runningSince`.
   activeMs: number;
   runningSince: number;
 }
 
-/**
- * Worker-side logic
- */
+// Worker logic: generates a batch per interval and posts the totals.
 export class ProducerEngine {
   private wasm: WasmProducer | null = null;
   private run: Run | null = null;
@@ -131,7 +129,7 @@ export class ProducerEngine {
   }
 
   private tick(run: Run): void {
-    // A timer of a replaced or paused run does nothing, even if clearTimeout was missed.
+    // A timer of a replaced or paused run does nothing.
     if (this.run !== run || run.state !== 'running') return;
 
     try {
@@ -162,7 +160,7 @@ export class ProducerEngine {
     this.schedule(run);
   }
 
-  // Releases the current run: timer and Rust memory.
+  // Frees the current run: timer and Rust memory.
   private stop(): void {
     if (!this.run) return;
     clearTimeout(this.run.timer);

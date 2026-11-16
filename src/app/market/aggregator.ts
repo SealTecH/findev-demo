@@ -17,13 +17,8 @@ export function createAggregates(instrumentCount: number): InstrumentAggregate[]
   return Array.from({ length: instrumentCount }, emptyAggregate);
 }
 
-/**
- * Folds every update of a batch into the running totals, in order. Mutates `aggregates` —
- * it runs in the worker on every batch, so it allocates nothing per update.
- *
- * - every trade counts once towards volume and notional (book quantities never do);
- * - last price and the bid/ask snapshot come from the instrument's latest update.
- */
+// Adds each update of the batch to the totals (mutates `aggregates`). Each trade counts once;
+// book quantities are not volume.
 export function applyBatch(aggregates: InstrumentAggregate[], data: Int32Array): void {
   for (let offset = 0; offset < data.length; offset += STRIDE) {
     const index = data[offset + F.instrumentIndex];
@@ -38,7 +33,6 @@ export function applyBatch(aggregates: InstrumentAggregate[], data: Int32Array):
     const quantity = data[offset + F.tradeQuantity];
     aggregate.lastPriceCents = price;
     aggregate.volume += quantity;
-    // price × quantity
     aggregate.notionalCents += BigInt(price * quantity);
 
     aggregate.bidCents = data[offset + F.bidCents];

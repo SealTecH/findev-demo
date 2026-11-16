@@ -1,17 +1,15 @@
 import { emptyAggregate } from './aggregator';
 import type { InstrumentAggregate } from './models';
 
-// askCents − bidCents.
 export function spreadCents(a: InstrumentAggregate): number | null {
   return a.bidCents === null || a.askCents === null ? null : a.askCents - a.bidCents;
 }
 
-// sum of price × quantity / quantity
+// Σ price × quantity / Σ quantity.
 export function vwapCents(a: InstrumentAggregate): number | null {
   return a.volume === 0 ? null : Number(a.notionalCents) / a.volume;
 }
 
-// (bidQuantity − askQuantity) / (bidQuantity + askQuantity).
 export function imbalance(a: InstrumentAggregate): number | null {
   if (a.bidQuantity === null || a.askQuantity === null) return null;
   const total = a.bidQuantity + a.askQuantity;
@@ -49,8 +47,7 @@ export interface InstrumentRow {
   readonly metrics: MetricValues;
 }
 
-// Instruments without totals yet (before the first snapshot) get empty ones:
-// unavailable values and zero volume.
+// Before the first snapshot an instrument has empty totals.
 export function buildRows(
   symbols: readonly string[],
   aggregates: readonly InstrumentAggregate[],

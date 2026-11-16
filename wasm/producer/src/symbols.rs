@@ -1,5 +1,4 @@
-//! Instrument symbols: `TKR001`, `TKR002`, … — a pure function of the index, no stored table.
-//! Numbering is 1-based and zero-padded to three digits; from 1000 on the number simply grows
+//! Instrument symbols `TKR001`, `TKR002`, …, computed from the index.
 
 /// Symbol of the instrument with zero-based `index`.
 pub fn symbol(index: u32) -> String {

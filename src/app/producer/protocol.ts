@@ -1,18 +1,13 @@
-/**
- * Messages between the main thread and the producer worker (discriminated unions on `type`).
- *
- * Every run-scoped message carries the `runId` of the run it belongs to. The worker ignores
- * commands for another run, and the main thread drops results from a previous run — so a
- * snapshot already queued when the user presses Apply can never overwrite the new run.
- */
+// Messages between the main thread and the worker. Run messages carry `runId`, so messages
+// of an old run are ignored on both sides.
 
 import type { InstrumentAggregate, RunStats } from '../market/models';
 import type { ProducerSettings } from './settings';
 
 export type MainToWorker =
-  /** Load and compile the Wasm module once per worker. */
+  // Load the Wasm module, once per worker.
   | { readonly type: 'init'; readonly wasmUrl: string }
-  /** Replace the current run: free the old generator, reset totals, start generating or paused. */
+  // Replace the current run and reset the totals.
   | {
       readonly type: 'start';
       readonly runId: number;
@@ -26,7 +21,7 @@ export type ProducerState = 'running' | 'paused';
 
 export type WorkerToMain =
   | { readonly type: 'ready' }
-  /** Sent once per run, before its first snapshot. */
+  // Sent once per run, before its first snapshot.
   | {
       readonly type: 'started';
       readonly runId: number;
@@ -42,13 +37,13 @@ export type WorkerToMain =
     }
   | {
       readonly type: 'error';
-      /** `null` for errors outside a run (loading the Wasm module). */
+      // `null` when loading the Wasm module fails.
       readonly runId: number | null;
       readonly phase: 'init' | 'run';
       readonly message: string;
     };
 
-/** Exhaustiveness check for `switch (message.type)`: a new message type fails to compile. */
+// Compile error if a `switch` misses a message type.
 export function assertNever(value: never): never {
   throw new Error(`Unexpected message: ${JSON.stringify(value)}`);
 }

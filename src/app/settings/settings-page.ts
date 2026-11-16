@@ -26,7 +26,7 @@ import {
 
 type SettingsForm = FormGroup<Record<SettingKey, FormControl<number | null>>>;
 
-// Puts the schema's error message under the `setting` key, so the template can show it as is.
+// Returns the schema's message as `{ setting: message }`.
 function settingValidator(definition: SettingDefinition) {
   return (control: AbstractControl): ValidationErrors | null => {
     const error = settingError(definition, control.value);

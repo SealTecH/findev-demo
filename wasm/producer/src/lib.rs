@@ -34,11 +34,6 @@ impl Producer {
         self.market.symbols().to_vec()
     }
 
-    #[wasm_bindgen(getter, js_name = instrumentCount)]
-    pub fn instrument_count(&self) -> u32 {
-        self.market.instrument_count()
-    }
-
     /// Generates `batch_size` updates as a flat `Int32Array` (`batch_size × STRIDE`).
     pub fn generate(&mut self, batch_size: u32) -> Result<Vec<i32>, JsError> {
         Ok(self.market.generate(batch_size)?)

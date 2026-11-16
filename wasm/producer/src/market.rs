@@ -1,13 +1,5 @@
-//! Market simulation: per-instrument state and the update generator.
-//!
-//! The generator is split into two small strategies so either can be swapped without touching
-//! `Market`:
-//! - [`PriceModel`] — how an instrument's quote (bid/ask and book quantities) evolves;
-//! - [`InstrumentPicker`] — which instrument the next update belongs to.
-//!
-//! Randomness comes from `fastrand` (wyrand): one `Rng` per run, seeded once by the browser,
-//! so a fixed seed reproduces a run exactly. It is compiled into the Wasm module together
-//! with the price logic.
+//! Market simulation. Prices ([`PriceModel`]) and the choice of instrument
+//! ([`InstrumentPicker`]) are swappable strategies. One seeded `fastrand::Rng` per run.
 
 use fastrand::Rng;
 
@@ -16,11 +8,10 @@ use crate::error::ProducerError;
 use crate::layout::{MarketUpdate, STRIDE};
 use crate::symbols;
 
-/// Mid price is kept within $1 … $100 000. Everything is `i32`: the largest intermediate
-/// value, `MAX_MID_CENTS + max_step`, is ~0.5 % of `i32::MAX`, so no step can overflow.
+/// Mid price stays within $1 … $100 000, far below `i32::MAX`.
 pub const MIN_MID_CENTS: i32 = 100;
 pub const MAX_MID_CENTS: i32 = 10_000_000;
-/// One price step moves the mid by at most `mid / MAX_STEP_DIVISOR` (0.1 %), at least 1 cent.
+/// One step moves the mid by at most 0.1 % (at least 1 cent).
 pub const MAX_STEP_DIVISOR: i32 = 1_000;
 pub const MAX_BOOK_QUANTITY: i32 = 2_000;
 pub const MAX_TRADE_QUANTITY: i32 = 500;
@@ -53,9 +44,7 @@ pub trait InstrumentPicker {
     fn pick(&self, instrument_count: u32, rng: &mut Rng) -> u32;
 }
 
-/// Random walk of the mid price: each step adds a uniform integer in `−max_step..=+max_step`
-/// cents, where `max_step` is 0.1 % of the current mid. A random spread is placed around the
-/// mid; book quantities are drawn fresh on every update.
+/// Random walk of the mid, a random spread around it and new book quantities on every update.
 pub struct RandomWalk;
 
 impl PriceModel for RandomWalk {
@@ -138,8 +127,7 @@ impl Market {
         self.instruments.get(index)
     }
 
-    /// Generates one update: picks an instrument, advances only that instrument's state and
-    /// simulates a trade at its bid (sell) or ask (buy).
+    /// Picks an instrument, advances its quote and trades at its bid or ask.
     pub fn next_update(&mut self) -> MarketUpdate {
         let index = self.picker.pick(self.instrument_count(), &mut self.rng);
         let state = &mut self.instruments[index as usize];

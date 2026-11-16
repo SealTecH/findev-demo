@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 use crate::error::ProducerError;
 
-/// Technical upper bound on instruments; the business limit (1–50) lives in the TS settings schema.
+/// Technical limits; the UI allows 1–50 instruments and 1–1000 updates.
 pub const MAX_INSTRUMENTS: u32 = 10_000;
 pub const MAX_BATCH_SIZE: u32 = 100_000;
 

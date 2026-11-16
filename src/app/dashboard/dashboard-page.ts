@@ -42,13 +42,12 @@ export class DashboardPage {
   });
   protected readonly nominalRate = computed(() => Math.round(this.producer.nominalRate()));
 
-  // Pause/Resume works only on a run that is running or paused and not waiting for the worker.
+  // Not while a command waits for the worker.
   protected readonly canToggle = computed(() => {
     const { status, pending } = this.state();
     return !pending && (status === 'running' || status === 'paused');
   });
 
-  // A new run with the same settings; needs a working producer.
   protected readonly canRestart = computed(() => {
     const { status } = this.state();
     return status === 'running' || status === 'paused';
