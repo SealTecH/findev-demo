@@ -1,0 +1,38 @@
+<h1 class="page-title">Producer settings</h1>
+<p class="intro">
+  Changes take effect only after Apply, which starts a new run and clears the totals.
+</p>
+
+<form class="settings-form" [formGroup]="form" (ngSubmit)="apply()">
+  @for (setting of schema; track setting.key) {
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>{{ setting.label }}</mat-label>
+      <input
+        matInput
+        type="number"
+        step="1"
+        [min]="setting.min"
+        [max]="setting.max"
+        [formControlName]="setting.key"
+      />
+      <span matTextSuffix>{{ setting.unit }}</span>
+      <mat-hint>{{ setting.hint }} From {{ setting.min }} to {{ setting.max }}.</mat-hint>
+      <mat-error>{{ form.controls[setting.key].errors?.['setting'] }}</mat-error>
+    </mat-form-field>
+  }
+
+  <p class="rate" data-testid="nominal-rate">
+    Nominal rate:
+    @let rate = nominalRate();
+    @if (rate !== null) {
+      <strong>{{ rate }} updates/s</strong>
+    } @else {
+      <strong>—</strong>
+    }
+  </p>
+
+  <div class="actions">
+    <button matButton="filled" type="submit" [disabled]="validSettings() === null">Apply</button>
+    <button matButton="outlined" type="button" (click)="reset()">Reset to defaults</button>
+  </div>
+</form>

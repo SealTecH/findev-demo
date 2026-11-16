@@ -48,10 +48,10 @@ function setup(wasm: Partial<WasmProducer> = {}) {
   return { engine, posted, generators, of };
 }
 
-async function started(runId = 1, settings = SETTINGS) {
+async function started(runId = 1, settings = SETTINGS, paused = false) {
   const context = setup();
   await context.engine.handle({ type: 'init', wasmUrl: '/wasm/producer_bg.wasm' });
-  await context.engine.handle({ type: 'start', runId, settings });
+  await context.engine.handle({ type: 'start', runId, settings, paused });
   return context;
 }
 
@@ -92,7 +92,7 @@ describe('ProducerEngine', () => {
 
     it('refuses to start before initialization', async () => {
       const { engine, of } = setup();
-      await engine.handle({ type: 'start', runId: 1, settings: SETTINGS });
+      await engine.handle({ type: 'start', runId: 1, settings: SETTINGS, paused: false });
       expect(of('error')[0]).toMatchObject({ runId: 1, phase: 'run' });
     });
   });
@@ -100,7 +100,9 @@ describe('ProducerEngine', () => {
   describe('generation', () => {
     it('announces the run, then generates one batch per interval with the requested size', async () => {
       const { generators, of } = await started();
-      expect(of('started')).toEqual([{ type: 'started', runId: 1, symbols: ['TKR001', 'TKR002'] }]);
+      expect(of('started')).toEqual([
+        { type: 'started', runId: 1, symbols: ['TKR001', 'TKR002'], state: 'running' },
+      ]);
 
       vi.advanceTimersByTime(499);
       expect(of('snapshot')).toHaveLength(0);
@@ -161,6 +163,19 @@ describe('ProducerEngine', () => {
       expect(last.stats).toEqual({ batches: 2, updates: 6, activeMs: 1_000 });
     });
 
+    it('a run can start paused: no batches until resume, paused time not counted', async () => {
+      const { engine, of } = await started(1, SETTINGS, true);
+      expect(of('started')[0].state).toBe('paused');
+
+      vi.advanceTimersByTime(10_000);
+      expect(of('snapshot')).toHaveLength(0);
+
+      await engine.handle({ type: 'resume', runId: 1 });
+      vi.advanceTimersByTime(500);
+      expect(of('snapshot')).toHaveLength(1);
+      expect(of('snapshot')[0].stats.activeMs).toBe(500);
+    });
+
     it('ignores pause/resume for another run and repeated commands', async () => {
       const { engine, of } = await started(2);
       await engine.handle({ type: 'pause', runId: 1 });
@@ -178,7 +193,7 @@ describe('ProducerEngine', () => {
       const { engine, generators, of } = await started();
       vi.advanceTimersByTime(500);
 
-      await engine.handle({ type: 'start', runId: 2, settings: SETTINGS });
+      await engine.handle({ type: 'start', runId: 2, settings: SETTINGS, paused: false });
       expect(generators[0].free).toHaveBeenCalledOnce();
 
       vi.advanceTimersByTime(500);
@@ -191,7 +206,7 @@ describe('ProducerEngine', () => {
     it('starts generating even if the previous run was paused', async () => {
       const { engine, of } = await started();
       await engine.handle({ type: 'pause', runId: 1 });
-      await engine.handle({ type: 'start', runId: 2, settings: SETTINGS });
+      await engine.handle({ type: 'start', runId: 2, settings: SETTINGS, paused: false });
       vi.advanceTimersByTime(500);
       expect(of('snapshot').map((s) => s.runId)).toEqual([2]);
     });
@@ -202,6 +217,7 @@ describe('ProducerEngine', () => {
         type: 'start',
         runId: 2,
         settings: { ...SETTINGS, intervalMs: 2_000 },
+        paused: false,
       });
       vi.advanceTimersByTime(1_999);
       expect(generators[0].generate).not.toHaveBeenCalled();

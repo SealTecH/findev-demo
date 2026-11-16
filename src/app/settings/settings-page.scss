@@ -1,0 +1,20 @@
+.intro {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+}
+
+.rate {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}

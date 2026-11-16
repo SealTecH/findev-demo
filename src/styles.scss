@@ -37,3 +37,33 @@ body {
   height: 100%;
 }
 /* You can add global styles to this file, and also import other style files */
+
+// Producer status, shown in the toolbar and on the dashboard.
+.status-badge {
+  display: inline-block;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font: var(--mat-sys-label-large);
+  background: var(--mat-sys-surface-container-highest);
+  color: var(--mat-sys-on-surface);
+
+  &[data-status='running'] {
+    background: #c8e6c9;
+    color: #1b5e20;
+  }
+
+  &[data-status='paused'] {
+    background: #ffe0b2;
+    color: #e65100;
+  }
+
+  &[data-status='error'] {
+    background: var(--mat-sys-error-container);
+    color: var(--mat-sys-on-error-container);
+  }
+}
+
+.page-title {
+  font: var(--mat-sys-headline-small);
+  margin: 0 0 16px;
+}

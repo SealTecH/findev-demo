@@ -13,6 +13,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideAppInitializer(() => inject(ProducerService).apply(DEFAULT_SETTINGS)),
+    // The app opens with a paused run with the defaults; Resume starts generating.
+    provideAppInitializer(() => inject(ProducerService).apply(DEFAULT_SETTINGS, { paused: true })),
   ],
 };

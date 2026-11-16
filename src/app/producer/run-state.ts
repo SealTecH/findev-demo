@@ -4,6 +4,14 @@ import { DEFAULT_SETTINGS, type ProducerSettings } from './settings';
 
 export type RunStatus = 'initializing' | 'starting' | 'running' | 'paused' | 'error';
 
+export const STATUS_LABELS: Readonly<Record<RunStatus, string>> = {
+  initializing: 'Initializing',
+  starting: 'Starting',
+  running: 'Running',
+  paused: 'Paused',
+  error: 'Error',
+};
+
 // Everything the UI shows about the producer and the current run.
 export interface RunState {
   readonly runId: number;
@@ -66,7 +74,7 @@ export function reduce(state: RunState, action: StoreAction): RunState {
     case 'ready':
       return { ...state, ready: true };
     case 'started':
-      return { ...state, status: 'running', pending: false, symbols: action.symbols };
+      return { ...state, status: action.state, pending: false, symbols: action.symbols };
     case 'status':
       return { ...state, status: action.state, pending: false };
     case 'snapshot':

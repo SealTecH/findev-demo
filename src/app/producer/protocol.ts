@@ -12,11 +12,12 @@ import type { ProducerSettings } from './settings';
 export type MainToWorker =
   /** Load and compile the Wasm module once per worker. */
   | { readonly type: 'init'; readonly wasmUrl: string }
-  /** Replace the current run: free the old generator, reset totals, start generating. */
+  /** Replace the current run: free the old generator, reset totals, start generating or paused. */
   | {
       readonly type: 'start';
       readonly runId: number;
       readonly settings: ProducerSettings;
+      readonly paused: boolean;
     }
   | { readonly type: 'pause'; readonly runId: number }
   | { readonly type: 'resume'; readonly runId: number };
@@ -26,7 +27,12 @@ export type ProducerState = 'running' | 'paused';
 export type WorkerToMain =
   | { readonly type: 'ready' }
   /** Sent once per run, before its first snapshot. */
-  | { readonly type: 'started'; readonly runId: number; readonly symbols: readonly string[] }
+  | {
+      readonly type: 'started';
+      readonly runId: number;
+      readonly symbols: readonly string[];
+      readonly state: ProducerState;
+    }
   | { readonly type: 'status'; readonly runId: number; readonly state: ProducerState }
   | {
       readonly type: 'snapshot';

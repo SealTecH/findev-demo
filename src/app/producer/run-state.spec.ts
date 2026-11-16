@@ -13,7 +13,7 @@ const RUNNING: RunState = apply(
   INITIAL_STATE,
   { type: 'runRequested', runId: 1, settings: DEFAULT_SETTINGS },
   { type: 'ready' },
-  { type: 'started', runId: 1, symbols: ['TKR001'] },
+  { type: 'started', runId: 1, symbols: ['TKR001'], state: 'running' },
   {
     type: 'snapshot',
     runId: 1,
@@ -48,6 +48,16 @@ describe('run state', () => {
     expect(RUNNING.instruments[0].volume).toBe(40);
   });
 
+  it('a run started paused is paused', () => {
+    const state = apply(
+      INITIAL_STATE,
+      { type: 'runRequested', runId: 1, settings: DEFAULT_SETTINGS },
+      { type: 'ready' },
+      { type: 'started', runId: 1, symbols: ['TKR001'], state: 'paused' },
+    );
+    expect(state.status).toBe('paused');
+  });
+
   describe('applying new settings', () => {
     it('clears the previous run values and totals and keeps the worker', () => {
       const state = reduce(RUNNING, { type: 'runRequested', runId: 2, settings: NEW_SETTINGS });
@@ -77,7 +87,7 @@ describe('run state', () => {
         instruments: [{ ...emptyAggregate(), volume: 99 }],
         stats: { batches: 9, updates: 99, activeMs: 9 },
       },
-      { type: 'started', runId: 1, symbols: ['OLD'] },
+      { type: 'started', runId: 1, symbols: ['OLD'], state: 'running' },
       { type: 'status', runId: 1, state: 'paused' },
       { type: 'error', runId: 1, phase: 'run', message: 'old failure' },
       { type: 'commandSent', runId: 1 },
